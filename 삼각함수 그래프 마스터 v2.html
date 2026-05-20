@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;background:#0f172a;color:#e2e8f0;}
+body{font-family:'Segoe UI',Tahoma,sans-serif;}
+.app{width:100%;padding:8px 10px 14px;}
+h1{text-align:center;padding:12px 0 8px;font-size:1.45em;background:linear-gradient(90deg,#60a5fa,#34d399,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+.tab-btn{padding:7px 24px;border:2px solid #334155;border-radius:20px;background:transparent;color:#64748b;font-size:.9em;font-weight:600;cursor:pointer;transition:all .2s;}
+.tab-btn.active{border-color:#3b82f6;background:#3b82f6;color:#fff;}
+.panel{display:none;}.panel.active{display:block;}
+
+/* ─── Explore ─── */
+.fsec{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+.fb{padding:7px 20px;border:2px solid #334155;border-radius:8px;background:#0f172a;font-size:.97em;font-weight:bold;cursor:pointer;transition:all .2s;}
+.fb[data-f=sin]{color:#60a5fa;}.fb[data-f=cos]{color:#34d399;}.fb[data-f=tan]{color:#f59e0b;}
+.fb.on[data-f=sin]{border-color:#60a5fa;background:#0d2847;}
+.fb.on[data-f=cos]{border-color:#34d399;background:#0d2e20;}
+.fb.on[data-f=tan]{border-color:#f59e0b;background:#2e1d08;}
+.cvbox{background:#1e293b;border-radius:10px;padding:10px;margin:8px 0;position:relative;}
+canvas{display:block;width:100%;border-radius:6px;}
+.irow{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0;}
+.pill{background:#1e293b;border-radius:16px;padding:4px 12px;font-size:.8em;color:#64748b;}
+.pill b{color:#60a5fa;}
+
+/* 슬라이더 카드: sticky로 화면 하단에 고정 */
+.scard{background:#1e293b;border-radius:10px;padding:12px 14px;margin:8px 0;
+  position:sticky;bottom:0;z-index:10;
+  box-shadow:0 -4px 18px rgba(0,0,0,.55);}
+.sr{display:flex;align-items:center;gap:10px;padding:4px 0;}
+.slb{width:140px;font-size:.85em;color:#64748b;flex-shrink:0;}.slb b{color:#cbd5e1;}
+input[type=range]{flex:1;accent-color:#3b82f6;cursor:pointer;height:4px;}
+.slv{width:52px;text-align:right;font-size:.87em;color:#94a3b8;flex-shrink:0;}
+
+/* ─── Quiz ─── */
+.qstart{text-align:center;padding:22px 8px;}
+.qstart h2{font-size:1.2em;margin-bottom:8px;}
+.lvldesc{color:#94a3b8;font-size:.87em;line-height:1.9;margin-bottom:16px;}
+.lvlbtns{display:flex;gap:10px;justify-content:center;}
+.lb{padding:9px 20px;border:none;border-radius:9px;font-size:.92em;font-weight:bold;color:#fff;cursor:pointer;transition:transform .1s;}
+.lb:active{transform:scale(.96);}
+.lb.l1{background:#22c55e;}.lb.l2{background:#f59e0b;}.lb.l3{background:#ef4444;}
+.qhdr{display:flex;justify-content:space-between;align-items:center;padding:4px 0 8px;font-size:.87em;}
+.qsc{color:#60a5fa;font-weight:bold;}.qpg{color:#64748b;}
+.qcard{background:#1e293b;border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.qi{font-size:.85em;color:#94a3b8;margin-bottom:6px;}
+.qeq{font-size:1.3em;color:#60a5fa;font-weight:bold;text-align:center;padding:4px 0;}
+.ctg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
+.ctb{padding:10px 6px;border:2px solid #334155;border-radius:8px;background:#1e293b;color:#e2e8f0;font-size:.87em;cursor:pointer;text-align:center;transition:border-color .15s;line-height:1.4;}
+.ctb:hover{border-color:#3b82f6;}
+.ctb.ok{border-color:#22c55e!important;background:#14532d;color:#86efac;}
+.ctb.no{border-color:#ef4444!important;background:#450a0a;color:#fca5a5;}
+.cgb{border:2px solid #334155;border-radius:8px;overflow:hidden;cursor:pointer;background:#0f172a;transition:border-color .15s;}
+.cgb:hover{border-color:#3b82f6;}.cgb.ok{border-color:#22c55e!important;}.cgb.no{border-color:#ef4444!important;}
+.fbbar{text-align:center;padding:9px;border-radius:8px;margin:6px 0;font-weight:bold;font-size:.93em;display:none;}
+.fbbar.ok{background:#14532d;color:#86efac;}.fbbar.no{background:#450a0a;color:#fca5a5;}
+.nxtbtn{display:none;width:100%;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:.93em;font-weight:bold;cursor:pointer;margin-top:4px;}
+.resarea{text-align:center;padding:32px 16px;}
+.resarea h2{font-size:1.2em;margin-bottom:12px;}
+.ressc{font-size:2.5em;font-weight:bold;color:#60a5fa;margin:8px 0;}
+.resmsg{font-size:.93em;color:#94a3b8;margin-bottom:18px;}
+.retbtn{padding:10px 26px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-size:.93em;font-weight:bold;cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📐 삼각함수 그래프 마스터</h1>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="goTab('explore',this)">🔍 탐험</button>
+    <button class="tab-btn" onclick="goTab('quiz',this)">🎯 퀴즈</button>
+    <div style="text-align:right;font-size:.95em;color:#e2e8f0;padding:4px 10px 2px;user-select:none;letter-spacing:.18em;font-weight:bold;">ㅇㅎㅂ</div>
+</div>
+
+  <!-- ═ EXPLORE ═ -->
+  <div id="panel-explore" class="panel active">
+    <div class="fsec">
+      <button class="fb on" data-f="sin" onclick="setF('sin',this)">sin</button>
+      <button class="fb" data-f="cos" onclick="setF('cos',this)">cos</button>
+      <button class="fb" data-f="tan" onclick="setF('tan',this)">tan</button>
+    </div>
+    <div class="cvbox"><canvas id="excv" height="220"></canvas></div>
+    <div class="irow">
+      <div class="pill">주기: <b id="ip">2π</b></div>
+      <div class="pill">진폭: <b id="ia">1</b></div>
+      <div class="pill">최댓값: <b id="imx">1</b></div>
+      <div class="pill">최솟값: <b id="imn">-1</b></div>
+    </div>
+    <div class="scard">
+      <div class="sr">
+        <div class="slb"><b>a</b> (진폭)</div>
+        <input type="range" id="sl-a" min="0.5" max="3" step="0.5" value="1" oninput="re()">
+        <div class="slv" id="sv-a">1</div>
+      </div>
+      <div class="sr">
+        <div class="slb"><b>b</b> (주기 인수)</div>
+        <input type="range" id="sl-b" min="0.5" max="3" step="0.5" value="1" oninput="re()">
+        <div class="slv" id="sv-b">1</div>
+      </div>
+      <div class="sr">
+        <div class="slb"><b>p</b> (위상 이동)</div>
+        <input type="range" id="sl-p" min="-4" max="4" step="1" value="0" oninput="re()">
+        <div class="slv" id="sv-p">0</div>
+      </div>
+      <div class="sr">
+        <div class="slb"><b>q</b> (수직 이동)</div>
+        <input type="range" id="sl-q" min="-2" max="2" step="1" value="0" oninput="re()">
+        <div class="slv" id="sv-q">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═ QUIZ ═ -->
+  <div id="panel-quiz" class="panel">
+    <div id="qzs">
+      <div class="qstart">
+        <h2>레벨을 선택하세요</h2>
+        <div class="lvldesc">
+          🟢 <b>기초</b>: sin, cos, tan 기본 그래프 식별<br>
+          🟡 <b>중급</b>: 진폭(a)과 주기(b) 변환 포함<br>
+          🔴 <b>고급</b>: 위상 이동(p)까지 포함
+        </div>
+        <div class="lvlbtns">
+          <button class="lb l1" onclick="startQ(1)">🟢 기초</button>
+          <button class="lb l2" onclick="startQ(2)">🟡 중급</button>
+          <button class="lb l3" onclick="startQ(3)">🔴 고급</button>
+        </div>
+      </div>
+    </div>
+    <div id="qzg" style="display:none">
+      <div class="qhdr">
+        <div class="qsc">점수: <span id="qsc">0</span>점</div>
+        <div class="qpg"><span id="qno">1</span> / 10</div>
+      </div>
+      <div id="qcon"></div>
+      <div class="fbbar" id="qfb"></div>
+      <button class="nxtbtn" id="qnxt" onclick="nextQ()">다음 문제 →</button>
+    </div>
+    <div id="qzr" style="display:none" class="resarea">
+      <h2>🏁 결과</h2>
+      <div class="ressc"><span id="rsc">0</span> / 10</div>
+      <div class="resmsg" id="rmsg"></div>
+      <button class="retbtn" onclick="backStart()">다시 도전 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FC={sin:'#60a5fa',cos:'#34d399',tan:'#f59e0b'};
+const PI=Math.PI;
+let EF='sin';
+
+function goTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='explore')setTimeout(re,40);
+}
+
+function setF(f,btn){
+  EF=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  re();
+}
+
+const CL={'-4':'-π','-3':'-3π/4','-2':'-π/2','-1':'-π/4','0':'0','1':'π/4','2':'π/2','3':'3π/4','4':'π'};
+
+function re(){
+  const a=+document.getElementById('sl-a').value;
+  const b=+document.getElementById('sl-b').value;
+  const pi=+document.getElementById('sl-p').value;
+  const p=pi*PI/4;
+  const q=+document.getElementById('sl-q').value;
+  document.getElementById('sv-a').textContent=a;
+  document.getElementById('sv-b').textContent=b;
+  document.getElementById('sv-p').textContent=CL[String(pi)]||'0';
+  document.getElementById('sv-q').textContent=q;
+  const period=EF==='tan'?PI/b:2*PI/b;
+  document.getElementById('ip').textContent=fmtPi(period);
+  if(EF!=='tan'){
+    document.getElementById('ia').textContent=a;
+    document.getElementById('imx').textContent=fmtN(a+q);
+    document.getElementById('imn').textContent=fmtN(-a+q);
+  }else{
+    document.getElementById('ia').textContent='—';
+    document.getElementById('imx').textContent='+∞';
+    document.getElementById('imn').textContent='-∞';
+  }
+  const cv=document.getElementById('excv');
+  sizeCv(cv,0.46);
+  drawT(cv,EF,a,b,p,q,false);
+}
+
+function fmtN(n){return n%1===0?n.toString():n.toFixed(1);}
+function fmtPi(v){
+  const r=v/PI;
+  if(Math.abs(r-4)<.01)return'4π';
+  if(Math.abs(r-2)<.01)return'2π';
+  if(Math.abs(r-1)<.01)return'π';
+  if(Math.abs(r-.5)<.01)return'π/2';
+  if(Math.abs(r-1/3)<.01)return'π/3';
+  if(Math.abs(r-2/3)<.01)return'2π/3';
+  return v.toFixed(2);
+}
+function cFrac(c){
+  if(Math.abs(c)<.001)return'';
+  const m=[[PI,'π'],[PI*.75,'3π/4'],[PI*.5,'π/2'],[PI/3,'π/3'],[PI/4,'π/4']];
+  for(const[v,l]of m){if(Math.abs(Math.abs(c)-v)<.001)return c>0?` + ${l}`:` − ${l}`;}
+  return c>0?` + ${c.toFixed(2)}`:`  − ${(-c).toFixed(2)}`;
+}
+function mkEq(fn,a,b,p,q){
+  const aS=a===1?'':a===.5?'½':String(a);
+  let inner=b===1?'x':b===.5?'x/2':`${b}x`;
+  inner+=cFrac(p);
+  const qS=q===0?'':q>0?` + ${q}`:` − ${-q}`;
+  return`y = ${aS}${fn}(${inner})${qS}`;
+}
+
+function sizeCv(cv,r){
+  const w=Math.max(100,cv.parentElement.clientWidth-20);
+  cv.width=w; cv.height=Math.round(w*r);
+}
+
+function asymLbl(x){
+  const tbl=[
+    [-7*PI/2,'x=-7π/2'],[-5*PI/2,'x=-5π/2'],[-3*PI/2,'x=-3π/2'],[-PI/2,'x=-π/2'],
+    [PI/2,'x=π/2'],[3*PI/2,'x=3π/2'],[5*PI/2,'x=5π/2'],[7*PI/2,'x=7π/2'],[9*PI/2,'x=9π/2'],
+    [PI/3,'x=π/3'],[2*PI/3,'x=2π/3'],[4*PI/3,'x=4π/3'],[5*PI/3,'x=5π/3'],
+    [7*PI/3,'x=7π/3'],[8*PI/3,'x=8π/3'],[10*PI/3,'x=10π/3'],[11*PI/3,'x=11π/3'],
+    [PI/4,'x=π/4'],[3*PI/4,'x=3π/4'],[5*PI/4,'x=5π/4'],[7*PI/4,'x=7π/4'],
+    [9*PI/4,'x=9π/4'],[11*PI/4,'x=11π/4'],[13*PI/4,'x=13π/4'],[15*PI/4,'x=15π/4'],
+    [PI/6,'x=π/6'],[5*PI/6,'x=5π/6'],[7*PI/6,'x=7π/6'],[11*PI/6,'x=11π/6'],
+    [13*PI/6,'x=13π/6'],[17*PI/6,'x=17π/6'],[19*PI/6,'x=19π/6'],[23*PI/6,'x=23π/6'],
+  ];
+  for(const[v,l]of tbl)if(Math.abs(x-v)<0.02)return l;
+  const r=x/PI,r2=Math.round(r*12)/12;
+  if(Math.abs(r-r2)<0.01){
+    const g=(a,b)=>b===0?a:g(b,a%b);
+    const num=Math.round(r*12),den=12,d=g(Math.abs(num),den);
+    const n2=num/d,d2=den/d;
+    if(d2===1)return`x=${n2}π`;
+    return`x=${n2}π/${d2}`;
+  }
+  return`x≈${x.toFixed(2)}`;
+}
+function drawT(cv,fn,a,b,p,q,mini){
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  const xMin=-2*PI,xMax=4*PI,yMin=-3.8,yMax=3.8;
+  const px=x=>(x-xMin)/(xMax-xMin)*W;
+  const py=y=>(1-(y-yMin)/(yMax-yMin))*H;
+
+  ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,W,H);
+
+  if(!mini){
+    // 그리드
+    ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=1;
+    for(let i=-4;i<=8;i++){ctx.beginPath();ctx.moveTo(px(i*PI/2),0);ctx.lineTo(px(i*PI/2),H);ctx.stroke();}
+    for(let y=-3;y<=3;y++){ctx.beginPath();ctx.moveTo(0,py(y));ctx.lineTo(W,py(y));ctx.stroke();}
+    // 축
+    ctx.strokeStyle='#64748b'; ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(0,py(0));ctx.lineTo(W,py(0));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(px(0),0);ctx.lineTo(px(0),H);ctx.stroke();
+    // x축 눈금 (밝고 크게)
+    const fs=Math.max(12,Math.min(15,W*.026));
+    ctx.fillStyle='#cbd5e1'; ctx.font=`bold ${fs}px sans-serif`;
+    ctx.textAlign='center';
+    /* π 단위 눈금: 크고 밝게 */
+    [[-2,'-2π'],[-1,'-π'],[1,'π'],[2,'2π'],[3,'3π'],[4,'4π']].forEach(([n,l])=>{
+      ctx.fillStyle='#cbd5e1'; ctx.font=`bold ${fs}px sans-serif`;
+      ctx.fillText(l,px(n*PI),py(0)+fs+3);
+      ctx.strokeStyle='#64748b'; ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(px(n*PI),py(0)-5);ctx.lineTo(px(n*PI),py(0)+5);ctx.stroke();
+    });
+    /* π/2 단위 눈금: 작고 흐리게 (홀수 배수만) */
+    const fsH=Math.max(9,Math.min(11,W*.019));
+    [[-3,'-3π/2'],[-1,'-π/2'],[1,'π/2'],[3,'3π/2'],[5,'5π/2'],[7,'7π/2']].forEach(([n,l])=>{
+      ctx.fillStyle='#64748b'; ctx.font=`${fsH}px sans-serif`;
+      ctx.fillText(l,px(n*PI/2),py(0)+fsH+4);
+      ctx.strokeStyle='#475569'; ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(px(n*PI/2),py(0)-3);ctx.lineTo(px(n*PI/2),py(0)+3);ctx.stroke();
+    });
+    // y축 눈금
+    ctx.textAlign='right';
+    [-3,-2,-1,1,2,3].forEach(y=>{
+      ctx.fillStyle='#cbd5e1';
+      ctx.fillText(y,px(0)-4,py(y)+fs/2);
+      ctx.strokeStyle='#64748b'; ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(px(0)-3,py(y));ctx.lineTo(px(0)+3,py(y));ctx.stroke();
+    });
+    // O 표시
+    ctx.fillStyle='#94a3b8'; ctx.textAlign='right';
+    ctx.fillText('O',px(0)-4,py(0)+fs+2);
+
+    // ── tan 점근선 + 방정식 ──
+    if(fn==='tan'){
+      const nLo=Math.ceil((b*xMin+p-PI/2)/PI);
+      const nHi=Math.floor((b*xMax+p-PI/2)/PI);
+      const afs=Math.max(9,Math.min(12,W*.02));
+      for(let n=nLo;n<=nHi;n++){
+        const ax=(PI/2-p+n*PI)/b;
+        if(ax<xMin-0.01||ax>xMax+0.01)continue;
+        const xx=px(ax);
+        /* 붉은 점선 */
+        ctx.strokeStyle='#ef4444';ctx.lineWidth=1.6;ctx.setLineDash([5,4]);ctx.globalAlpha=.8;
+        ctx.beginPath();ctx.moveTo(xx,0);ctx.lineTo(xx,H-18);ctx.stroke();
+        ctx.setLineDash([]);ctx.globalAlpha=1;
+        /* 방정식 레이블 (하단) */
+        ctx.fillStyle='#ef4444';ctx.font=`bold ${afs}px sans-serif`;ctx.textAlign='center';
+        ctx.fillText(asymLbl(ax),xx,H-4);
+      }
+    }
+
+    // ── 그래프 상단에 식 표시 (크고 흰색) ──
+    const eq=mkEq(fn,a,b,p,q);
+    const col=FC[fn]||'#60a5fa';
+    const eqFs=Math.max(15,Math.min(22,W*.038));
+    ctx.font=`bold ${eqFs}px sans-serif`;
+    // 반투명 배경
+    const tw=ctx.measureText(eq).width;
+    ctx.fillStyle='rgba(15,23,42,0.72)';
+    ctx.fillRect(px(0)+6, 8, tw+16, eqFs+10);
+    // 식 텍스트
+    ctx.fillStyle='#ffffff';
+    ctx.textAlign='left';
+    ctx.fillText(eq, px(0)+14, 8+eqFs+1);
+  } else {
+    ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,py(0));ctx.lineTo(W,py(0));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(px(0),0);ctx.lineTo(px(0),H);ctx.stroke();
+  }
+
+  // 곡선
+  ctx.strokeStyle=FC[fn]||'#60a5fa';
+  ctx.lineWidth=mini?2:2.8;
+  ctx.beginPath();
+  let prv=null,go=false;
+  const steps=W*3;
+  for(let i=0;i<=steps;i++){
+    const x=xMin+(xMax-xMin)*i/steps;
+    let y;
+    if(fn==='sin')y=a*Math.sin(b*x+p)+q;
+    else if(fn==='cos')y=a*Math.cos(b*x+p)+q;
+    else y=a*Math.tan(b*x+p)+q;
+    if(!isFinite(y)||Math.abs(y)>20){if(go){ctx.stroke();ctx.beginPath();}go=false;prv=null;continue;}
+    const cy=py(Math.max(yMin-1,Math.min(yMax+1,y)));
+    const cx=px(x);
+    if(prv!==null&&Math.abs(cy-prv)>H*.5){ctx.stroke();ctx.beginPath();go=false;prv=null;}
+    if(!go){ctx.moveTo(cx,cy);go=true;}else ctx.lineTo(cx,cy);
+    prv=cy;
+  }
+  ctx.stroke();
+}
+
+// ── Quiz ──
+let QZ={};
+const QPC={
+  1:{fns:['sin','cos','tan'],as:[1],bs:[1],cs:[0]},
+  2:{fns:['sin','cos'],as:[1,2,3,.5],bs:[1,2,.5],cs:[0]},
+  3:{fns:['sin','cos'],as:[1,2],bs:[1,2],cs:[0,PI/6,PI/4,PI/3,PI/2,-PI/6,-PI/4,-PI/3,-PI/2]}
+};
+const DPOOL=[
+  {fn:'sin',a:1,b:1,c:0},{fn:'cos',a:1,b:1,c:0},{fn:'tan',a:1,b:1,c:0},
+  {fn:'sin',a:2,b:1,c:0},{fn:'cos',a:2,b:1,c:0},{fn:'sin',a:.5,b:1,c:0},
+  {fn:'cos',a:.5,b:1,c:0},{fn:'sin',a:1,b:2,c:0},{fn:'cos',a:1,b:2,c:0},
+  {fn:'sin',a:3,b:1,c:0},{fn:'cos',a:3,b:1,c:0},{fn:'sin',a:1,b:.5,c:0},
+  {fn:'cos',a:1,b:.5,c:0},{fn:'sin',a:2,b:2,c:0},{fn:'cos',a:2,b:2,c:0},
+  {fn:'sin',a:1,b:1,c:PI/4},{fn:'cos',a:1,b:1,c:PI/4},
+  {fn:'sin',a:1,b:1,c:-PI/4},{fn:'cos',a:1,b:1,c:-PI/3},
+];
+const rc=a=>a[Math.floor(Math.random()*a.length)];
+const shuf=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=~~(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
+
+function genQ(lv){const p=QPC[lv];return{fn:rc(p.fns),a:rc(p.as),b:rc(p.bs),c:rc(p.cs)};}
+
+function qEq(q){
+  const{fn,a,b,c}=q;
+  const aS=a===1?'':a===.5?'½':a;
+  let inner=b===1?'x':b===.5?'x/2':`${b}x`;
+  const cM=[[PI/6,'π/6'],[PI/4,'π/4'],[PI/3,'π/3'],[PI/2,'π/2'],[-PI/6,'π/6'],[-PI/4,'π/4'],[-PI/3,'π/3'],[-PI/2,'π/2']];
+  for(const[v,l]of cM){if(Math.abs(c-v)<.001){inner+=c>0?` + ${l}`:` − ${l}`;break;}}
+  return`y = ${aS}${fn}(${inner})`;
+}
+
+function qM(q1,q2){return q1.fn===q2.fn&&q1.a===q2.a&&q1.b===q2.b&&Math.abs(q1.c-q2.c)<.001;}
+
+function genDist(corr,lv){
+  const res=[],p=QPC[lv]; let t=0;
+  while(res.length<3&&t++<200){
+    const d=t<80?{fn:rc(p.fns),a:rc(p.as),b:rc(p.bs),c:rc(p.cs)}:{...rc(DPOOL)};
+    if(qM(d,corr))continue;
+    if(res.some(x=>qM(x,d)))continue;
+    if(qEq(d)===qEq(corr))continue;
+    res.push(d);
+  }
+  return res;
+}
+
+function startQ(lv){
+  QZ={lv,qs:Array.from({length:10},()=>genQ(lv)),cur:0,score:0,ans:false};
+  document.getElementById('qzs').style.display='none';
+  document.getElementById('qzg').style.display='block';
+  document.getElementById('qzr').style.display='none';
+  renderQ();
+}
+
+function renderQ(){
+  const q=QZ.qs[QZ.cur];
+  QZ.ans=false;
+  document.getElementById('qno').textContent=QZ.cur+1;
+  document.getElementById('qsc').textContent=QZ.score;
+  document.getElementById('qfb').style.display='none';
+  document.getElementById('qnxt').style.display='none';
+  const isG2E=QZ.cur%2===0;
+  const dists=genDist(q,QZ.lv);
+  const choices=shuf([q,...dists]);
+  const ci=choices.indexOf(q);
+  const con=document.getElementById('qcon');
+  if(isG2E){
+    con.innerHTML=`<div class="qcard"><div class="qi">다음 그래프에 해당하는 식은?</div><canvas id="qmcv" height="180"></canvas></div><div class="ctg" id="qa"></div>`;
+    setTimeout(()=>{
+      const cv=document.getElementById('qmcv');
+      sizeCv(cv,.36); drawT(cv,q.fn,q.a,q.b,q.c,0,false);
+    },40);
+    const area=document.getElementById('qa'),btns=[];
+    choices.forEach((ch,i)=>{
+      const b=document.createElement('button');
+      b.className='ctb'; b.textContent=qEq(ch);
+      area.appendChild(b); btns.push(b);
+    });
+    btns.forEach((b,i)=>{b.onclick=()=>doAns(b,i===ci,btns[ci],'.ctb');});
+  }else{
+    con.innerHTML=`<div class="qcard"><div class="qi">다음 식의 그래프는?</div><div class="qeq">${qEq(q)}</div></div><div class="ctg" id="qa"></div>`;
+    const area=document.getElementById('qa'),boxes=[];
+    choices.forEach((ch,i)=>{
+      const box=document.createElement('div');
+      box.className='cgb';
+      const cv=document.createElement('canvas');
+      cv.width=280; cv.height=130; cv.style.cssText='display:block;width:100%;';
+      box.appendChild(cv); area.appendChild(box); boxes.push(box);
+      drawT(cv,ch.fn,ch.a,ch.b,ch.c,0,true);
+    });
+    boxes.forEach((box,i)=>{box.onclick=()=>doAns(box,i===ci,boxes[ci],'.cgb');});
+  }
+}
+
+function doAns(el,ok,okEl,sel){
+  if(QZ.ans)return;
+  QZ.ans=true;
+  document.querySelectorAll(sel).forEach(e=>e.onclick=null);
+  el.classList.add(ok?'ok':'no');
+  if(!ok)okEl.classList.add('ok');
+  if(ok)QZ.score++;
+  document.getElementById('qsc').textContent=QZ.score;
+  const fb=document.getElementById('qfb');
+  fb.style.display='block';
+  fb.className='fbbar '+(ok?'ok':'no');
+  fb.textContent=ok?'🎉 정답!':'❌ 틀렸어요 — 초록 테두리가 정답이에요!';
+  document.getElementById('qnxt').style.display='block';
+}
+
+function nextQ(){if(++QZ.cur>=10)showRes();else renderQ();}
+
+function showRes(){
+  document.getElementById('qzg').style.display='none';
+  document.getElementById('qzr').style.display='block';
+  const s=QZ.score;
+  document.getElementById('rsc').textContent=`${s} / 10`;
+  let msg='💪 탐험 모드로 다시 복습해봐요!';
+  if(s>=9)msg='🏆 완벽해요! 삼각함수 그래프 마스터!';
+  else if(s>=7)msg='👍 아주 잘했어요! 거의 다 맞혔네요.';
+  else if(s>=5)msg='📚 절반 이상! 조금만 더 연습해봐요.';
+  document.getElementById('rmsg').textContent=msg;
+}
+
+function backStart(){
+  document.getElementById('qzs').style.display='block';
+  document.getElementById('qzg').style.display='none';
+  document.getElementById('qzr').style.display='none';
+}
+
+window.addEventListener('load',()=>setTimeout(re,80));
+window.addEventListener('resize',()=>{if(document.getElementById('panel-explore').classList.contains('active'))re();});
+</script>
+</body>
+</html>
